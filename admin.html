@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K Digital — admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#20222d;
+    --ink-2:#2a2d3a;
+    --ink-3:#34384a;
+    --paper:#f6efe1;
+    --paper-dim:#ece2cd;
+    --gold:#c6a15b;
+    --ink-text:#211e28;
+    --paper-text:#efe9dc;
+    --paper-text-dim:#b9b2a1;
+    --danger:#b85c50;
+
+    --seal-wedding:#b85c6b;
+    --seal-birthday:#4e7a63;
+    --seal-babyshower:#7c8fc7;
+    --seal-graduation:#c6a15b;
+    --seal-anniversary:#9c6b9e;
+    --seal-engagement:#c77b93;
+    --seal-holiday:#a6493b;
+    --seal-retirement:#5b7b8c;
+    --seal-other:#6b5b73;
+
+    --radius:6px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.25), 0 8px 20px -8px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(198,161,91,0.07), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(124,143,199,0.06), transparent 55%);
+    color:var(--paper-text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+  button{font-family:inherit;}
+
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+
+  /* ---------- layout shell ---------- */
+  .shell{max-width:1120px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- header ---------- */
+  header.top{
+    padding:28px 0 10px;
+  }
+  .top-row{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand h1{font-size:26px;font-weight:600;letter-spacing:-.01em;}
+  .brand .dot{color:var(--gold);}
+  .brand-tag{
+    font-family:'Space Mono',monospace;font-size:12px;color:var(--paper-text-dim);
+  }
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    border-radius:999px;border:1px solid rgba(239,233,220,.18);
+    background:transparent;color:var(--paper-text);
+    padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .btn:hover{border-color:rgba(239,233,220,.4);}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .btn-primary{
+    background:var(--gold);border-color:var(--gold);color:#25200f;
+  }
+  .btn-primary:hover{background:#d6b46f;transform:translateY(-1px);}
+  .btn-ghost{border-color:transparent;color:var(--paper-text-dim);padding:10px 12px;}
+  .btn-ghost:hover{color:var(--paper-text);}
+  .btn-danger{color:var(--danger);}
+
+  /* ---------- hero ---------- */
+  .hero{
+    display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;
+    padding:46px 0 54px;
+  }
+  .hero h2{
+    font-size:44px;line-height:1.08;font-weight:600;letter-spacing:-.01em;
+    max-width:11ch;
+  }
+  .hero h2 em{color:var(--gold);font-style:italic;font-weight:500;}
+  .hero p.lede{
+    margin:18px 0 26px;max-width:44ch;color:var(--paper-text-dim);font-size:15.5px;line-height:1.6;
+  }
+  .hero-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .hero-stat{
+    font-family:'Space Mono',monospace;font-size:12px;color:var(--paper-text-dim);
+  }
+  .hero-stat b{color:var(--paper-text);font-weight:700;}
+
+  /* fanned decorative cards */
+  .fan{position:relative;height:280px;}
+  .fan-card{
+    position:absolute;width:168px;height:224px;top:20px;left:50%;
+    background:var(--paper);border-radius:4px;box-shadow:var(--shadow-card);
+    transform-origin:bottom center;
+    padding:18px 16px;color:var(--ink-text);
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .fan-card .seal{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 2px 4px rgba(0,0,0,.3);
+    align-self:flex-end;
+  }
+  .fan-card .fan-label{font-family:'Fraunces',serif;font-style:italic;font-size:15px;line-height:1.25;}
+  .fan-card .fan-sub{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#8a8272;}
+  .fan-1{transform:translateX(-142px) rotate(-13deg);}
+  .fan-2{transform:translateX(-52px) rotate(-4deg);z-index:2;}
+  .fan-3{transform:translateX(38px) rotate(6deg);z-index:3;}
+  .fan-4{transform:translateX(122px) rotate(15deg);z-index:1;}
+
+  /* ---------- controls ---------- */
+  .controls{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:8px 0 20px;border-bottom:1px solid rgba(239,233,220,.1);
+    flex-wrap:wrap;
+  }
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .tab{
+    font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:.03em;
+    padding:8px 13px;border-radius:5px 5px 0 0;
+    background:var(--ink-2);color:var(--paper-text-dim);
+    border:1px solid rgba(239,233,220,.08);border-bottom:none;
+    cursor:pointer;transition:background .15s ease,color .15s ease;
+  }
+  .tab:hover{color:var(--paper-text);}
+  .tab.active{background:var(--paper);color:var(--ink-text);font-weight:700;}
+  .search{
+    display:flex;align-items:center;gap:8px;
+    background:var(--ink-2);border:1px solid rgba(239,233,220,.1);
+    border-radius:999px;padding:8px 14px;min-width:220px;
+  }
+  .search input{
+    background:transparent;border:none;outline:none;color:var(--paper-text);
+    font-size:13.5px;width:100%;font-family:'Inter',sans-serif;
+  }
+  .search input::placeholder{color:var(--paper-text-dim);}
+  .search svg{flex:none;opacity:.6;}
+
+  /* ---------- gallery ---------- */
+  .gallery{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:22px;padding:30px 0 70px;
+  }
+  .card{
+    background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow-card);
+    overflow:hidden;display:flex;flex-direction:column;color:var(--ink-text);
+    transition:transform .18s ease, box-shadow .18s ease;
+    position:relative;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 4px 8px rgba(0,0,0,.3), 0 16px 28px -10px rgba(0,0,0,.5);}
+  .card-cover{
+    height:150px;position:relative;background:var(--paper-dim);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .card-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card-cover .monogram{
+    font-family:'Fraunces',serif;font-size:56px;font-style:italic;color:#8a8272;
+  }
+  .seal-badge{
+    position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.3), 0 2px 5px rgba(0,0,0,.35);
+  }
+  .card-body{padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .card-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.25;}
+  .card-meta{
+    font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;
+    color:#8a8272;
+  }
+  .card-note{font-size:13px;color:#4d4740;line-height:1.45;margin-top:2px;}
+  .card-actions{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:12px 16px 14px;border-top:1px solid rgba(33,30,40,.08);margin-top:auto;
+  }
+  .open-link{
+    display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;
+    color:var(--ink-text);text-decoration:none;
+  }
+  .open-link:hover{color:#8a5a2f;}
+  .icon-btn{
+    background:none;border:none;cursor:pointer;color:#8a8272;padding:4px;
+    display:flex;align-items:center;border-radius:4px;
+  }
+  .icon-btn:hover{color:var(--ink-text);}
+  .icon-btn:focus-visible{outline:2px solid var(--gold);}
+
+  /* ---------- empty state ---------- */
+  .empty{
+    grid-column:1/-1;text-align:center;padding:70px 20px;
+    border:1px dashed rgba(239,233,220,.18);border-radius:8px;
+  }
+  .empty h3{font-size:22px;font-weight:500;font-style:italic;color:var(--paper-text);}
+  .empty p{color:var(--paper-text-dim);font-size:14px;margin:10px 0 22px;}
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,14,18,.6);backdrop-filter:blur(2px);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:5vh 16px;overflow-y:auto;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--paper);color:var(--ink-text);border-radius:8px;
+    width:100%;max-width:480px;padding:30px 30px 26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
+  }
+  .modal h3{font-size:22px;font-weight:600;margin-bottom:4px;}
+  .modal .modal-sub{font-family:'Space Mono',monospace;font-size:11px;color:#8a8272;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#4d4740;
+    font-family:'Space Mono',monospace;letter-spacing:.02em;text-transform:uppercase;font-size:10.5px;
+  }
+  .field input[type=text],.field input[type=date],.field input[type=url],.field select,.field textarea{
+    width:100%;padding:10px 12px;border-radius:5px;border:1px solid #d8cbae;
+    background:#fffdf9;color:var(--ink-text);font-size:14px;font-family:'Inter',sans-serif;
+  }
+  .field textarea{resize:vertical;min-height:60px;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .file-row{display:flex;align-items:center;gap:12px;}
+  .file-preview{
+    width:56px;height:56px;border-radius:5px;background:var(--paper-dim);flex:none;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-family:'Fraunces',serif;font-style:italic;color:#8a8272;font-size:22px;
+  }
+  .file-preview img{width:100%;height:100%;object-fit:cover;}
+  .file-btn{
+    font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:5px;
+    border:1px solid #d8cbae;background:#fffdf9;cursor:pointer;color:#4d4740;
+  }
+  .file-btn:hover{background:#f1e9d9;}
+  .hint{font-size:11.5px;color:#9a8f77;margin-top:5px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
+  .modal-btn{
+    padding:10px 18px;border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer;border:1px solid transparent;
+  }
+  .modal-btn.cancel{background:transparent;border-color:#d8cbae;color:#4d4740;}
+  .modal-btn.cancel:hover{background:#f1e9d9;}
+  .modal-btn.save{background:var(--ink);color:var(--paper-text);}
+  .modal-btn.save:hover{background:#2f3242;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+    background:var(--ink);color:var(--paper-text);padding:11px 20px;border-radius:999px;
+    font-size:13px;font-weight:600;box-shadow:0 10px 30px -8px rgba(0,0,0,.6);
+    border:1px solid rgba(239,233,220,.15);
+    opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;
+    z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  footer{padding:26px 0 40px;text-align:center;color:var(--paper-text-dim);font-size:12px;font-family:'Space Mono',monospace;}
+
+  @media (max-width:760px){
+    .hero{grid-template-columns:1fr;}
+    .fan{display:none;}
+    .hero h2{font-size:34px;max-width:none;}
+    .field-row{grid-template-columns:1fr;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand">
+        <h1>K Digital<span class="dot">.</span></h1>
+        <span class="brand-tag">— admin · manage your invitations</span>
+      </div>
+      <button class="btn btn-primary" id="openAddBtn">+ New invitation</button>
+    </div>
+    <p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--paper-text-dim);margin:14px 0 0;">This is the admin page — anything you add here shows up on the viewer page. Keep this link for yourself; share the viewer page with guests.</p>
+  </header>
+
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Personal showcase</span>
+      <h2 style="margin-top:10px;">Keep every invite you've <em>ever</em> made.</h2>
+      <p class="lede">One place for the wedding sites, the birthday pages, the baby-shower invites — every web-based invitation you've designed, filed by occasion and ready to share.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="openAddBtn2">+ Add your first invitation</button>
+        <span class="hero-stat" id="heroStat"><b>0</b> saved · <b>0</b> occasions</span>
+      </div>
+    </div>
+    <div class="fan" aria-hidden="true">
+      <div class="fan-card fan-1">
+        <div class="seal" style="background:var(--seal-wedding);">W</div>
+        <div><div class="fan-label">You're<br>invited</div><div class="fan-sub">Wedding</div></div>
+      </div>
+      <div class="fan-card fan-2">
+        <div class="seal" style="background:var(--seal-birthday);">B</div>
+        <div><div class="fan-label">Come<br>celebrate</div><div class="fan-sub">Birthday</div></div>
+      </div>
+      <div class="fan-card fan-3">
+        <div class="seal" style="background:var(--seal-babyshower);">S</div>
+        <div><div class="fan-label">Baby<br>shower</div><div class="fan-sub">Est. soon</div></div>
+      </div>
+      <div class="fan-card fan-4">
+        <div class="seal" style="background:var(--seal-graduation);">G</div>
+        <div><div class="fan-label">Class<br>of '26</div><div class="fan-sub">Graduation</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <div class="tabs" id="tabs"></div>
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search your invitations…">
+    </div>
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+
+  <footer>filed with care, one card at a time</footer>
+</div>
+
+<!-- Add / Edit modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">New invitation</h3>
+    <div class="modal-sub">fill in the card</div>
+    <form id="inviteForm">
+      <input type="hidden" id="inviteId">
+      <div class="field">
+        <label for="fieldTitle">Title</label>
+        <input type="text" id="fieldTitle" placeholder="Sarah &amp; Tom's Wedding" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fieldOccasion">Occasion</label>
+          <select id="fieldOccasion"></select>
+        </div>
+        <div class="field">
+          <label for="fieldDate">Event date</label>
+          <input type="date" id="fieldDate">
+        </div>
+      </div>
+      <div class="field" id="customOccasionField" style="display:none;">
+        <label for="fieldCustomOccasion">Occasion name</label>
+        <input type="text" id="fieldCustomOccasion" placeholder="Housewarming">
+      </div>
+      <div class="field">
+        <label for="fieldLink">Link to the invitation</label>
+        <input type="url" id="fieldLink" placeholder="https://…" required>
+      </div>
+      <div class="field">
+        <label>Cover image</label>
+        <div class="file-row">
+          <div class="file-preview" id="filePreview">＋</div>
+          <button type="button" class="file-btn" id="fileTrigger">Choose image</button>
+          <button type="button" class="file-btn" id="fileClear" style="display:none;">Remove</button>
+          <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+        <div class="hint">Optional — leave blank for a plain monogram card.</div>
+      </div>
+      <div class="field">
+        <label for="fieldNote">Note</label>
+        <textarea id="fieldNote" placeholder="Anything you want to remember about this one…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn cancel" id="cancelBtn">Cancel</button>
+        <button type="submit" class="modal-btn save" id="saveBtn">Save card</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG — fill these in before deploying (see README.md)
+   ============================================================ */
+const SUPABASE_URL = "YOUR_SUPABASE_URL";       // e.g. https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+// Change this before you deploy. It's a light deterrent only —
+// anyone who views this page's source can read it. See README.md.
+const ADMIN_PASSCODE = "changeme123";
+/* ============================================================ */
+
+(function(){
+  // ---------- setup check ----------
+  if(SUPABASE_URL.includes('YOUR_SUPABASE_URL') || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY')){
+    document.body.innerHTML = `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#20222d;color:#efe9dc;font-family:Inter,sans-serif;padding:40px;text-align:center;">
+      <div style="max-width:480px;">
+        <h1 style="font-size:20px;margin-bottom:12px;">Almost there</h1>
+        <p style="color:#b9b2a1;font-size:14px;line-height:1.6;">This page needs your Supabase project URL and anon key before it will work. Open this file, find the CONFIG section near the top of the script, and fill in <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code>. See README.md for step-by-step instructions.</p>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // ---------- admin passcode gate ----------
+  const unlocked = sessionStorage.getItem('kd_admin_unlocked') === 'yes';
+  if(!unlocked){
+    const entered = prompt('Enter the admin passcode to continue:');
+    if(entered !== ADMIN_PASSCODE){
+      document.body.innerHTML = `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#20222d;color:#b9b2a1;font-family:Inter,sans-serif;font-size:14px;">Incorrect passcode. Refresh the page to try again.</div>`;
+      return;
+    }
+    sessionStorage.setItem('kd_admin_unlocked','yes');
+  }
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const OCCASIONS = [
+    {key:'wedding', label:'Wedding', seal:'var(--seal-wedding)', mono:'W'},
+    {key:'birthday', label:'Birthday', seal:'var(--seal-birthday)', mono:'B'},
+    {key:'babyshower', label:'Baby Shower', seal:'var(--seal-babyshower)', mono:'S'},
+    {key:'graduation', label:'Graduation', seal:'var(--seal-graduation)', mono:'G'},
+    {key:'anniversary', label:'Anniversary', seal:'var(--seal-anniversary)', mono:'A'},
+    {key:'engagement', label:'Engagement', seal:'var(--seal-engagement)', mono:'E'},
+    {key:'holiday', label:'Holiday', seal:'var(--seal-holiday)', mono:'H'},
+    {key:'retirement', label:'Retirement', seal:'var(--seal-retirement)', mono:'R'},
+    {key:'other', label:'Other', seal:'var(--seal-other)', mono:'✦'}
+  ];
+  const occMap = Object.fromEntries(OCCASIONS.map(o=>[o.key,o]));
+
+  let invites = [];
+  let activeTab = 'all';
+  let searchTerm = '';
+  let pendingCoverImage = null; // base64 string while editing in modal
+
+  const galleryEl = document.getElementById('gallery');
+  const tabsEl = document.getElementById('tabs');
+  const overlayEl = document.getElementById('overlay');
+  const toastEl = document.getElementById('toast');
+  const heroStatEl = document.getElementById('heroStat');
+
+  // ---------- storage ----------
+  function rowToInvite(row){
+    return {
+      id: row.id, title: row.title, occasion: row.occasion, customOccasion: row.custom_occasion || '',
+      eventDate: row.event_date, link: row.link, note: row.note, coverImage: row.cover_image,
+      createdAt: row.created_at ? new Date(row.created_at).getTime() : 0
+    };
+  }
+  async function loadData(){
+    const { data, error } = await sb.from('invitations').select('*').order('created_at', { ascending: false });
+    if(error){ showToast('Could not load invitations'); console.error(error); invites = []; }
+    else invites = (data || []).map(rowToInvite);
+    render();
+  }
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toastEl.classList.remove('show'), 2400);
+  }
+
+  // ---------- tabs ----------
+  function renderTabs(){
+    const counts = {};
+    invites.forEach(inv => counts[inv.occasion] = (counts[inv.occasion]||0)+1);
+    let html = `<button class="tab ${activeTab==='all'?'active':''}" data-tab="all">All (${invites.length})</button>`;
+    OCCASIONS.forEach(o=>{
+      const c = counts[o.key]||0;
+      html += `<button class="tab ${activeTab===o.key?'active':''}" data-tab="${o.key}">${escapeHtml(o.label)} (${c})</button>`;
+    });
+    tabsEl.innerHTML = html;
+    tabsEl.querySelectorAll('.tab').forEach(t=>{
+      t.addEventListener('click', ()=>{ activeTab = t.dataset.tab; render(); });
+    });
+  }
+
+  // ---------- gallery ----------
+  function occasionLabel(inv){
+    if(inv.occasion === 'other' && inv.customOccasion) return inv.customOccasion;
+    return occMap[inv.occasion] ? occMap[inv.occasion].label : 'Other';
+  }
+  function formatDate(d){
+    if(!d) return '';
+    const dt = new Date(d + 'T00:00:00');
+    if(isNaN(dt)) return '';
+    return dt.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+  }
+
+  function render(){
+    renderTabs();
+    let list = invites.slice().sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+    if(activeTab !== 'all') list = list.filter(i => i.occasion === activeTab);
+    if(searchTerm){
+      const q = searchTerm.toLowerCase();
+      list = list.filter(i => (i.title||'').toLowerCase().includes(q) || (i.note||'').toLowerCase().includes(q));
+    }
+
+    const occCount = new Set(invites.map(i=>i.occasion)).size;
+    heroStatEl.innerHTML = `<b>${invites.length}</b> saved · <b>${occCount}</b> occasion${occCount===1?'':'s'}`;
+
+    if(list.length === 0){
+      let heading, sub;
+      if(invites.length === 0){
+        heading = 'Your drawer is empty';
+        sub = 'Add the first invitation to start your collection.';
+      } else if(searchTerm){
+        heading = 'No matches';
+        sub = `Nothing found for "${escapeHtml(searchTerm)}".`;
+      } else {
+        heading = `No ${escapeHtml(occMap[activeTab] ? occMap[activeTab].label.toLowerCase() : 'matching')} invitations yet`;
+        sub = 'Add one to fill this tab.';
+      }
+      galleryEl.innerHTML = `<div class="empty"><h3>${heading}</h3><p>${sub}</p><button class="btn btn-primary" id="emptyAddBtn">+ Add invitation</button></div>`;
+      document.getElementById('emptyAddBtn').addEventListener('click', ()=>openModal());
+      return;
+    }
+
+    galleryEl.innerHTML = list.map(cardHtml).join('');
+    list.forEach(inv=>{
+      const card = galleryEl.querySelector(`[data-id="${inv.id}"]`);
+      card.querySelector('.edit-btn').addEventListener('click', ()=>openModal(inv.id));
+      card.querySelector('.delete-btn').addEventListener('click', ()=>deleteInvite(inv.id));
+    });
+  }
+
+  function cardHtml(inv){
+    const occ = occMap[inv.occasion] || occMap.other;
+    const cover = inv.coverImage
+      ? `<img src="${inv.coverImage}" alt="">`
+      : `<div class="monogram">${escapeHtml((inv.title||'?').trim().charAt(0).toUpperCase())}</div>`;
+    return `
+    <div class="card" data-id="${inv.id}">
+      <div class="card-cover">
+        ${cover}
+        <div class="seal-badge" style="background:${occ.seal};">${occ.mono}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${escapeHtml(inv.title)}</div>
+        <div class="card-meta">${escapeHtml(occasionLabel(inv))}${inv.eventDate ? ' · ' + formatDate(inv.eventDate) : ''}</div>
+        ${inv.note ? `<div class="card-note">${escapeHtml(inv.note)}</div>` : ''}
+      </div>
+      <div class="card-actions">
+        <a class="open-link" href="${escapeAttr(inv.link)}" target="_blank" rel="noopener noreferrer">Open ↗</a>
+        <div>
+          <button class="icon-btn edit-btn" title="Edit" aria-label="Edit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+          <button class="icon-btn delete-btn" title="Delete" aria-label="Delete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- delete ----------
+  async function deleteInvite(id){
+    const inv = invites.find(i=>i.id===id);
+    if(!inv) return;
+    if(!confirm(`Delete "${inv.title}"? This can't be undone.`)) return;
+    const { error } = await sb.from('invitations').delete().eq('id', id);
+    if(error){ showToast('Could not delete'); console.error(error); return; }
+    invites = invites.filter(i=>i.id!==id);
+    render();
+    showToast('Invitation deleted');
+  }
+
+  // ---------- modal ----------
+  const occasionSelect = document.getElementById('fieldOccasion');
+  occasionSelect.innerHTML = OCCASIONS.map(o=>`<option value="${o.key}">${escapeHtml(o.label)}</option>`).join('');
+  occasionSelect.addEventListener('change', ()=>{
+    document.getElementById('customOccasionField').style.display = occasionSelect.value === 'other' ? 'block' : 'none';
+  });
+
+  function openModal(id){
+    const editing = !!id;
+    document.getElementById('modalTitle').textContent = editing ? 'Edit invitation' : 'New invitation';
+    const inv = editing ? invites.find(i=>i.id===id) : null;
+
+    document.getElementById('inviteId').value = id || '';
+    document.getElementById('fieldTitle').value = inv ? inv.title : '';
+    occasionSelect.value = inv ? inv.occasion : OCCASIONS[0].key;
+    document.getElementById('customOccasionField').style.display = occasionSelect.value === 'other' ? 'block' : 'none';
+    document.getElementById('fieldCustomOccasion').value = inv ? (inv.customOccasion||'') : '';
+    document.getElementById('fieldDate').value = inv ? (inv.eventDate||'') : '';
+    document.getElementById('fieldLink').value = inv ? inv.link : '';
+    document.getElementById('fieldNote').value = inv ? (inv.note||'') : '';
+
+    pendingCoverImage = inv ? (inv.coverImage || null) : null;
+    updateFilePreview();
+
+    overlayEl.classList.add('show');
+    document.getElementById('fieldTitle').focus();
+  }
+  function closeModal(){
+    overlayEl.classList.remove('show');
+    document.getElementById('inviteForm').reset();
+    pendingCoverImage = null;
+  }
+  document.getElementById('openAddBtn').addEventListener('click', ()=>openModal());
+  document.getElementById('openAddBtn2').addEventListener('click', ()=>openModal());
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  overlayEl.addEventListener('click', (e)=>{ if(e.target === overlayEl) closeModal(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && overlayEl.classList.contains('show')) closeModal(); });
+
+  // ---------- file / image handling ----------
+  const filePreviewEl = document.getElementById('filePreview');
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('fileTrigger').addEventListener('click', ()=>fileInput.click());
+  document.getElementById('fileClear').addEventListener('click', ()=>{
+    pendingCoverImage = null;
+    fileInput.value = '';
+    updateFilePreview();
+  });
+
+  function updateFilePreview(){
+    const clearBtn = document.getElementById('fileClear');
+    if(pendingCoverImage){
+      filePreviewEl.innerHTML = `<img src="${pendingCoverImage}" alt="">`;
+      clearBtn.style.display = 'inline-block';
+    } else {
+      filePreviewEl.innerHTML = '＋';
+      clearBtn.style.display = 'none';
+    }
+  }
+
+  fileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxW = 640;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        pendingCoverImage = canvas.toDataURL('image/jpeg', 0.78);
+        updateFilePreview();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---------- form submit ----------
+  document.getElementById('inviteForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const id = document.getElementById('inviteId').value;
+    const title = document.getElementById('fieldTitle').value.trim();
+    const link = document.getElementById('fieldLink').value.trim();
+    if(!title || !link){ showToast('Title and link are required'); return; }
+
+    const payload = {
+      title,
+      occasion: occasionSelect.value,
+      custom_occasion: document.getElementById('fieldCustomOccasion').value.trim() || null,
+      event_date: document.getElementById('fieldDate').value || null,
+      link,
+      note: document.getElementById('fieldNote').value.trim() || null,
+      cover_image: pendingCoverImage
+    };
+
+    if(id){
+      const { error } = await sb.from('invitations').update(payload).eq('id', id);
+      if(error){ showToast('Could not save changes'); console.error(error); return; }
+      const idx = invites.findIndex(i=>i.id===id);
+      if(idx > -1){
+        invites[idx] = { ...invites[idx], title, occasion: payload.occasion, customOccasion: payload.custom_occasion || '',
+          eventDate: payload.event_date, link, note: payload.note, coverImage: payload.cover_image };
+      }
+      showToast('Invitation updated');
+    } else {
+      const { data, error } = await sb.from('invitations').insert(payload).select().single();
+      if(error){ showToast('Could not save'); console.error(error); return; }
+      invites.push(rowToInvite(data));
+      showToast('Invitation added');
+    }
+    closeModal();
+    render();
+  });
+
+  // ---------- search ----------
+  document.getElementById('searchInput').addEventListener('input', (e)=>{
+    searchTerm = e.target.value.trim();
+    render();
+  });
+
+  loadData();
+})();
+</script>
+</body>
+</html>
